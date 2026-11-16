@@ -1,0 +1,12 @@
+.env
+emergency_web
+emergency_web_test
+emergency_system
+emergency_system.exe
+a.out
+*.o
+*.dSYM
+__pycache__/
+node_modules/
+.vercel/
+.DS_Store

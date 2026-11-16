@@ -1,0 +1,16 @@
+{
+  "name": "pulse-response",
+  "version": "1.0.0",
+  "description": "City-Wide Emergency Response and Resource Dispatch System",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "./run_web.sh"
+  },
+  "keywords": [
+    "emergency-response",
+    "dispatch",
+    "google-maps"
+  ],
+  "author": "Shreyansh Thakur",
+  "license": "MIT"
+}

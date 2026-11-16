@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102d2b">
+  <title>Pulse Response — Emergency Dispatch</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Pulse Response home">
+        <span class="brand-mark"><svg viewBox="0 0 36 36" aria-hidden="true"><path d="M18 3 31 8v9c0 8-5.6 13.1-13 16C10.6 30.1 5 25 5 17V8z"/><path class="brand-pulse" d="M8 18h6l3-7 4.4 14 3-7H29"/></svg></span>
+        <span><strong>Pulse<span>Response</span></strong><small>EMERGENCY COORDINATION</small></span>
+      </a>
+      <div class="topbar-right"><span class="simulation-pill"><i></i> SIMULATION MODE</span><span class="system-live"><i></i> Backend connected</span></div>
+    </header>
+
+    <main>
+      <section class="welcome-row">
+        <div><p class="eyebrow">CITY-WIDE RESPONSE NETWORK · PUNE</p><h1>Help, coordinated.<br><span>When every minute matters.</span></h1><p class="welcome-copy">A connected simulation for emergency reporting, automatic dispatch and responder coordination.</p></div>
+        <div class="hero-stats" aria-label="Live fleet summary"><div><span id="stat-available">—</span><small>Available units</small></div><div><span id="stat-active">—</span><small>Active requests</small></div><div><span id="stat-resolved">—</span><small>Resolved</small></div></div>
+      </section>
+
+      <nav class="portal-tabs" aria-label="Choose portal">
+        <button class="portal-tab active" data-portal="citizen" aria-selected="true"><span class="tab-icon">＋</span><span><strong>Citizen portal</strong><small>Report an emergency</small></span></button>
+        <button class="portal-tab" data-portal="responder" aria-selected="false"><span class="tab-icon responder-icon">↗</span><span><strong>Responder portal</strong><small>Map-first dispatch desk</small></span></button>
+      </nav>
+
+      <div id="system-alert" class="alert hidden" role="status"></div>
+      <div id="maps-alert" class="alert alert-warn hidden" role="status"></div>
+
+      <section id="citizen-portal" class="portal-view">
+        <div class="section-heading"><div><p class="eyebrow">CITIZEN REQUEST PORTAL</p><h2>Report an emergency</h2><p>Share what happened and where help is needed. The system will select an eligible responder automatically.</p></div><div class="step-badge"><span>01</span> REPORT</div></div>
+        <div class="citizen-grid">
+          <form id="emergency-form" class="panel report-panel">
+            <div class="panel-title"><span class="number-tag">01</span><div><h3>What is happening?</h3><p>Choose the closest match.</p></div></div>
+            <div class="emergency-types" role="radiogroup" aria-label="Emergency type">
+              <label class="type-option"><input type="radio" name="type" value="medical" checked><span class="type-symbol medical">✚</span><span><b>Medical</b><small>Injury or illness</small></span><span class="radio-dot"></span></label>
+              <label class="type-option"><input type="radio" name="type" value="fire"><span class="type-symbol fire">♨</span><span><b>Fire</b><small>Fire or smoke</small></span><span class="radio-dot"></span></label>
+              <label class="type-option"><input type="radio" name="type" value="road_accident"><span class="type-symbol accident">↗</span><span><b>Road accident</b><small>Collision or crash</small></span><span class="radio-dot"></span></label>
+              <label class="type-option"><input type="radio" name="type" value="police"><span class="type-symbol police">◇</span><span><b>Police help</b><small>Safety or crime</small></span><span class="radio-dot"></span></label>
+              <label class="type-option type-option-wide"><input type="radio" name="type" value="other"><span class="type-symbol other">!</span><span><b>Other emergency</b><small>Flooding, hazard or other urgent incident</small></span><span class="radio-dot"></span></label>
+            </div>
+
+            <div class="divider"></div>
+            <div class="panel-title"><span class="number-tag">02</span><div><h3>Where is help needed?</h3><p>Use your current position or set a different incident location.</p></div></div>
+            
+            <div class="location-status">
+              <span class="gps-icon">◎</span>
+              <div>
+                <div class="location-status-header">
+                  <b id="location-status-title">Finding your location…</b>
+                  <span id="accuracy-pill" class="accuracy-pill hidden">GPS ±0m</span>
+                </div>
+                <small id="location-status-copy">Your device will ask permission. You can change the location at any time.</small>
+              </div>
+              <button id="retry-location" class="text-button" type="button">Retry GPS</button>
+            </div>
+
+            <div id="accuracy-warning" class="accuracy-warning-box hidden">
+              <span class="warning-icon">⚠️</span>
+              <div>
+                <b>Estimated Network/IP Geolocation Detected</b>
+                <p id="accuracy-warning-text">The browser returned a coarse location. If you are in Kondhwa or another specific Pune neighborhood, please drag the map pin or select your zone below to ensure dispatch accuracy.</p>
+              </div>
+            </div>
+
+            <label class="field-label" for="address">Confirmed emergency location <span class="required">*</span></label>
+            <input id="address" class="text-input" type="text" placeholder="Address, landmark or Pune zone" autocomplete="street-address" required>
+            
+            <div id="manual-zone-wrap" class="field">
+              <label class="field-label" for="manual-zone">Select incident zone (Pune)</label>
+              <select id="manual-zone" class="text-input"></select>
+              <p class="field-hint">Used for algorithmic dispatch. Selecting a zone will also center the map pin on that zone.</p>
+            </div>
+            
+            <label class="field-label" for="location-details">Additional location details <span class="optional">OPTIONAL</span></label>
+            <input id="location-details" class="text-input" type="text" placeholder="e.g., Kondhwa main road, near blue hospital gate">
+            
+            <div id="map-shell" class="map-shell">
+              <div id="citizen-map" class="map-canvas" aria-label="Map to confirm emergency location"></div>
+              <div id="map-placeholder" class="map-placeholder">
+                <span class="map-placeholder-icon">⌖</span>
+                <b>Map preview</b>
+                <p>Configure Google Maps to see and adjust the location on a real map. You can still submit using the location fields.</p>
+              </div>
+              <div class="map-caption">
+                <span class="map-dot"></span>
+                <span id="map-caption-text">Location not confirmed</span>
+                <button type="button" id="use-zone-location" class="text-button">Snap to selected zone</button>
+              </div>
+            </div>
+
+            <!-- Diagnostics Accordion -->
+            <details class="location-diagnostics-details">
+              <summary>📍 Location & GPS Diagnostics</summary>
+              <div id="location-diagnostics-content" class="diagnostics-content">
+                <div><span>Reported GPS Coords:</span> <strong id="diag-raw-coords">None</strong></div>
+                <div><span>Accuracy Radius:</span> <strong id="diag-accuracy">Unknown</strong></div>
+                <div><span>Position Timestamp:</span> <strong id="diag-timestamp">None</strong></div>
+                <div><span>Confirmed Coords:</span> <strong id="diag-confirmed-coords">None</strong></div>
+                <div><span>Nearest Dispatch Zone:</span> <strong id="diag-zone">None</strong></div>
+                <div><span>Location Source:</span> <strong id="diag-source">Pending</strong></div>
+              </div>
+            </details>
+
+            <div class="divider"></div>
+            <div class="panel-title"><span class="number-tag">03</span><div><h3>Tell us a little more</h3><p>Only the situation description is required.</p></div></div>
+            <label class="field-label" for="description">What happened? <span class="required">*</span></label>
+            <textarea id="description" class="text-input textarea" rows="3" maxlength="500" placeholder="Briefly describe what is happening and any immediate danger…" required></textarea>
+            <div class="field-row"><div class="field"><label class="field-label" for="people">People affected <span class="optional">IF KNOWN</span></label><input id="people" class="text-input" type="number" min="1" max="1000" placeholder="If known"></div><div class="field"><label class="field-label" for="contact">Contact number <span class="optional">OPTIONAL</span></label><input id="contact" class="text-input" type="tel" maxlength="30" placeholder="Phone number"></div></div>
+            <div class="triage-note"><span>✳</span><p>Priority is estimated automatically by the simulation from the report details. It is not a substitute for a real emergency operator.</p></div>
+            <button id="submit-emergency" class="primary-button submit-button" type="submit"><span>Report emergency</span><span aria-hidden="true">→</span></button>
+            <p class="form-disclaimer">Simulation only. This app does not contact 112 or any real emergency service.</p>
+            <div id="form-message" class="form-message hidden" role="alert"></div>
+          </form>
+
+          <aside class="citizen-side">
+            <div id="confirmation-card" class="panel confirmation-card hidden" aria-live="polite"></div>
+            <div class="panel process-panel"><div class="side-title"><span class="side-icon">✳</span><div><h3>What happens next?</h3><p>Automatic dispatch workflow</p></div></div><ol class="process-list"><li><span>1</span><div><b>Request recorded</b><small>Your incident receives a unique ID.</small></div></li><li><span>2</span><div><b>Responder selected</b><small>The C++ priority queue and Dijkstra evaluate eligible units.</small></div></li><li><span>3</span><div><b>60s Acceptance Deadline</b><small>Responder has 60 seconds to accept and navigate or gets auto-reassigned.</small></div></li><li><span>4</span><div><b>Standby restored</b><small>After resolution, the unit is assigned an optimized standby hub.</small></div></li></ol></div>
+            <div class="panel safety-panel"><span class="safety-mark">!</span><div><h3>In a real emergency</h3><p>This is a student project simulation. For urgent real-world assistance in India, call <strong>112</strong>.</p></div></div>
+            <div class="panel mini-note"><span class="mini-note-icon">⌁</span><div><b>Real map, simulated dispatch</b><p>Google Maps handles real-world geography. The existing C++ road graph is a separate 16-zone simulation used for assignment calculations.</p></div></div>
+          </aside>
+        </div>
+        <section class="request-section"><div class="section-heading compact"><div><p class="eyebrow">LIVE REQUEST TRACKER</p><h2>Recent emergencies</h2><p>Statuses are read from this application's backend.</p></div><button id="refresh-requests" class="secondary-button" type="button">↻ Refresh</button></div><div id="request-list" class="request-list"><div class="empty-state">Loading emergency requests…</div></div></section>
+      </section>
+
+      <!-- RESPONDER PORTAL: MAP-FIRST DASHBOARD -->
+      <section id="responder-portal" class="portal-view hidden">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">RESPONDER PORTAL · LIVE DISPATCH OPERATIONS</p>
+            <h2>Emergency Operations Desk</h2>
+            <p>Real-time map-first situational awareness. Automatic dispatch with 60-second acceptance and timeout handling.</p>
+          </div>
+          <div class="map-view-actions">
+            <button id="fit-map-overview" class="secondary-button" type="button" title="Fit all markers in view">⤢ Overview</button>
+            <div class="step-badge responder-step"><span>02</span> RESPOND</div>
+          </div>
+        </div>
+
+        <!-- 3-Column Map-First Grid Layout -->
+        <div class="responder-map-first-grid">
+          <!-- Left: Filterable Responder Fleet Sidebar -->
+          <aside class="responder-fleet-sidebar panel">
+            <div class="fleet-sidebar-header">
+              <div class="side-title">
+                <span class="side-icon">▤</span>
+                <div>
+                  <h3>Emergency Fleet</h3>
+                  <p id="fleet-count-summary">8 units online</p>
+                </div>
+              </div>
+              <input id="responder-search" class="text-input text-input-sm" type="text" placeholder="Search ID or type...">
+              <div class="responder-filter-tabs">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="available">Available</button>
+                <button class="filter-chip" data-filter="assigned">Assigned</button>
+                <button class="filter-chip" data-filter="en_route">En Route</button>
+                <button class="filter-chip" data-filter="returning">Standby</button>
+              </div>
+            </div>
+            <div id="fleet-sidebar-list" class="fleet-sidebar-list">
+              <div class="empty-state">Loading fleet...</div>
+            </div>
+          </aside>
+
+          <!-- Center: Interactive Full Google Map -->
+          <div class="responder-map-container panel">
+            <div class="responder-map-topbar">
+              <div class="map-legend">
+                <span class="legend-item"><span class="legend-dot dot-available"></span> Available</span>
+                <span class="legend-item"><span class="legend-dot dot-assigned"></span> Awaiting / Assigned</span>
+                <span class="legend-item"><span class="legend-dot dot-enroute"></span> En Route</span>
+                <span class="legend-item"><span class="legend-dot dot-emergency"></span> Incident</span>
+                <span class="legend-item"><span class="legend-dot dot-standby"></span> Standby Hub</span>
+              </div>
+              <div class="map-filter-toggles">
+                <label class="toggle-label"><input type="checkbox" id="toggle-layer-responders" checked> Units</label>
+                <label class="toggle-label"><input type="checkbox" id="toggle-layer-emergencies" checked> Incidents</label>
+                <label class="toggle-label"><input type="checkbox" id="toggle-layer-standby" checked> Standby</label>
+              </div>
+            </div>
+            <div class="responder-map-wrap">
+              <div id="responder-map" class="map-canvas responder-map-large"></div>
+              <div id="responder-map-placeholder" class="map-placeholder">
+                <span class="map-placeholder-icon">⌖</span>
+                <b>Google Maps not configured</b>
+                <p>Add your API key to .env to view the live dispatch map.</p>
+              </div>
+            </div>
+            <div class="map-bottom-bar">
+              <span id="map-selection-hint">Click any unit or incident marker on the map to inspect details</span>
+              <span class="map-provider-tag">GOOGLE MAPS JAVASCRIPT API</span>
+            </div>
+          </div>
+
+          <!-- Right: Selected Item Operations Desk -->
+          <aside class="responder-operations-sidebar">
+            <div id="active-item-panel" class="panel operations-panel">
+              <div class="empty-state">Select a responder or emergency from the map or list</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <footer class="footer"><span>Pulse Response <span class="footer-dot">·</span> C++ Graph Dispatch Simulation</span><span id="last-updated">Waiting for backend…</span></footer>
+    </main>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
